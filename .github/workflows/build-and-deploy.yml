@@ -34,7 +34,7 @@ jobs:
         password: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
 
     - name: Build and deploy container image
-      run: make build
+      run: make docker-build
 
     - name: Tag image
       run: |
