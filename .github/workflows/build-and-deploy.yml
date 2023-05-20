@@ -33,8 +33,30 @@ jobs:
         username: _json_key
         password: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
 
-    - name: Build container image
-      run: make docker-build
+    - name: Build and deploy container image
+      run: make build
 
-    - name: log show images
-      run: docker images
+    - name: Tag image
+      run: |
+        docker tag content-preparing:master ${{ env.CONTAINER_REGISTRY }}:${{ env.IMAGE_TAG }}
+
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+
+    - name: redeploy cloud run
+      run: gcloud run deploy ${{ env.SERVICE_NAME }} --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} --image ${{ env.CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+    - name: Set New Revision
+      id: set_revision
+      run: |
+        revision=$(gcloud run revisions list --service=${{ env.SERVICE_NAME }} --platform=managed --region=${{ env.REGION }} --format="value(metadata.name)")
+        echo "::set-output name=new_revision::$revision"
+
+    - name: Redeploy Cloud Run
+      run: |
+        gcloud run services update-traffic ${{ env.SERVICE_NAME }} --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} --to-revisions=${{ steps.set_revision.outputs.new_revision }}=100
