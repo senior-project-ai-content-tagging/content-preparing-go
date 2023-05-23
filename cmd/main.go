@@ -109,36 +109,49 @@ func (h Handler) submitWeblink(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("json.Unmarshal to struct: %v", err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
+
+	tx := h.db.MustBegin()
+	sql, entityTicket := h.ticketRepository.UpdateTicketStatus(entity.Ticket{Id: ticketSubmit.TicketId, Status: "PROCESSING"})
+	tx.NamedExecContext(ctx, sql, entityTicket)
+	err = tx.Commit()
+	if err != nil {
+		log.Print(err)
+		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	log.Println("Update ticket status to PROCESSING")
 
 	scraper, err := h.selector.SelectScraper(ticketSubmit.Url)
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	content, title, err := scraper.Scrap(ticketSubmit.Url)
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	contentEN, err := h.translator.Translate(content)
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
+
 	titleEN, err := h.translator.Translate(title)
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
-	tx := h.db.MustBegin()
-
-	sql, entityTicket := h.ticketRepository.UpdateTicketStatus(entity.Ticket{Id: ticketSubmit.TicketId, Status: "PROCESSING"})
-	tx.NamedExecContext(ctx, sql, entityTicket)
-
+	tx = h.db.MustBegin()
 	sql, ticketId := h.ticketRepository.FindTicketById(ticketSubmit.TicketId)
 	var ticket entity.Ticket
 	err = tx.GetContext(ctx, &ticket, sql, ticketId)
@@ -159,6 +172,7 @@ func (h Handler) submitWeblink(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	pubsubConfig := config.GetPublisherConfig()
@@ -166,12 +180,14 @@ func (h Handler) submitWeblink(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	err = prepapredPublisher.Publish(entity.TicketPubSub{TicketId: ticketId})
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	res.WriteHeader(http.StatusOK)
@@ -198,18 +214,28 @@ func (h Handler) submitContent(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("json.Unmarshal to struct: %v", err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	tx := h.db.MustBegin()
 	sql, entityTicket := h.ticketRepository.UpdateTicketStatus(entity.Ticket{Id: ticketSubmit.TicketId, Status: "PROCESSING"})
 	tx.NamedExecContext(ctx, sql, entityTicket)
+	tx.Commit()
+	if err != nil {
+		log.Print(err)
+		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	log.Println("Update ticket status to PROCESSING")
 
+	tx = h.db.MustBegin()
 	sql, ticketId := h.ticketRepository.FindTicketById(ticketSubmit.TicketId)
 	var ticket entity.Ticket
 	err = tx.GetContext(ctx, &ticket, sql, ticketId)
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	sql, contentId := h.contentRepository.FindContentById(ticket.ContentId)
@@ -218,18 +244,21 @@ func (h Handler) submitContent(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	contentEN, err := h.translator.Translate(content.ContentTH)
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	titleEN, err := h.translator.Translate(content.TitleTH)
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	newContent := entity.Content{
@@ -248,6 +277,7 @@ func (h Handler) submitContent(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	pubsubConfig := config.GetPublisherConfig()
@@ -255,12 +285,14 @@ func (h Handler) submitContent(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	err = prepapredPublisher.Publish(entity.TicketPubSub{TicketId: ticketId})
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	res.WriteHeader(http.StatusOK)

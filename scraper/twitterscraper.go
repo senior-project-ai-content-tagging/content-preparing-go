@@ -34,12 +34,11 @@ func (s TwitterScraper) Scrap(url string) (string, string, error) {
 		return "", "", err
 	}
 
-	log.Print(html)
-
 	var content string
 	title := ""
-	articleBox := doc.Find("div[data-testid='tweetText]").First()
+	articleBox := doc.Find("div[data-testid='tweetText']").First()
 	articleBox.Find("span").Each(func(i int, s *goquery.Selection) {
+		log.Println(s)
 		content += s.Text()
 	})
 
