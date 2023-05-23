@@ -8,7 +8,7 @@ on:
 env:
   CONTAINER_REGISTRY: ${{ vars.CONTAINER_REGISTRY }}
   SERVICE_NAME: content-preparing
-  REGION: asia-east1
+  REGION: asia-southeast1
   IMAGE_NAME: content-preparing
   IMAGE_TAG: ${{ github.sha }}
   PROJECT_ID: ${{ vars.PROJECT_ID }}
