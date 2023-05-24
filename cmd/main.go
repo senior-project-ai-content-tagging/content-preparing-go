@@ -158,10 +158,10 @@ func (h Handler) submitWeblink(res http.ResponseWriter, req *http.Request) {
 
 	newContent := entity.Content{
 		Id:        ticket.ContentId,
-		TitleTH:   title,
-		ContentTH: content,
-		TitleEN:   titleEN,
-		ContentEN: contentEN,
+		TitleTH:   &title,
+		ContentTH: &content,
+		TitleEN:   &titleEN,
+		ContentEN: &contentEN,
 	}
 	log.Println(newContent)
 
@@ -247,14 +247,14 @@ func (h Handler) submitContent(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	contentEN, err := h.translator.Translate(content.ContentTH)
+	contentEN, err := h.translator.Translate(*content.ContentTH)
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	titleEN, err := h.translator.Translate(content.TitleTH)
+	titleEN, err := h.translator.Translate(*content.TitleTH)
 	if err != nil {
 		log.Print(err)
 		http.Error(res, "Bad Request", http.StatusBadRequest)
@@ -265,8 +265,8 @@ func (h Handler) submitContent(res http.ResponseWriter, req *http.Request) {
 		Id:        ticket.ContentId,
 		TitleTH:   content.TitleTH,
 		ContentTH: content.ContentTH,
-		TitleEN:   titleEN,
-		ContentEN: contentEN,
+		TitleEN:   &titleEN,
+		ContentEN: &contentEN,
 	}
 	log.Println(newContent)
 
