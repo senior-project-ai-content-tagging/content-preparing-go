@@ -27,3 +27,7 @@ func (s BaseScraper) CheckDomain(inputUrl string) (bool, error) {
 
 	return host == s.Host, nil
 }
+
+func (s BaseScraper) CleanText(input string) string {
+	return strings.ReplaceAll(strings.TrimSpace(input), "\n", "")
+}

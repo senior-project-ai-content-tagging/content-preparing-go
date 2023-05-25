@@ -6,19 +6,28 @@ import (
 )
 
 type ScraperSelector struct {
-	sanookScraper  *SanookScraper
-	twitterScraper *TwitterScraper
+	sanookScraper   *SanookScraper
+	twitterScraper  *TwitterScraper
+	facebookScraper *FacebookScraper
+	pantipScraper   *PantipScraper
+	siamzoneScraper *SiamzoneScraper
 }
 
-func NewSelector(sanookScraper *SanookScraper, twitterScraper *TwitterScraper) *ScraperSelector {
+func NewSelector(sanookScraper *SanookScraper, twitterScraper *TwitterScraper, facebookScraper *FacebookScraper,
+	pantipScraper *PantipScraper,
+	siamzoneScraper *SiamzoneScraper,
+) *ScraperSelector {
 	return &ScraperSelector{
-		sanookScraper:  sanookScraper,
-		twitterScraper: twitterScraper,
+		sanookScraper:   sanookScraper,
+		twitterScraper:  twitterScraper,
+		facebookScraper: facebookScraper,
+		pantipScraper:   pantipScraper,
+		siamzoneScraper: siamzoneScraper,
 	}
 }
 
 func (s ScraperSelector) SelectScraper(inputUrl string) (Scraper, error) {
-	listScraper := []Scraper{s.sanookScraper, s.twitterScraper}
+	listScraper := []Scraper{s.sanookScraper, s.twitterScraper, s.facebookScraper, s.pantipScraper, s.siamzoneScraper}
 	for _, scraper := range listScraper {
 		validScraper, err := scraper.CheckDomain(inputUrl)
 		if err != nil {

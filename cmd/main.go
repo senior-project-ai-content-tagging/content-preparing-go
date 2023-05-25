@@ -41,6 +41,7 @@ type Handler struct {
 	translator        translator.Translator
 	sanookScraper     *scraper.SanookScraper
 	twitterScraper    *scraper.TwitterScraper
+	facebookScraper   *scraper.FacebookScraper
 	selector          *scraper.ScraperSelector
 }
 
@@ -72,8 +73,11 @@ func initHanler() (*Handler, error) {
 	}
 
 	twitterScraper := scraper.NewTwitterScraper(wd)
+	facebookScraper := scraper.NewFacebookScraper(wd)
+	pantipScraper := scraper.NewPantipScraper(wd)
+	siamzoneScraper := scraper.NewSiamzoneScraper(wd)
 
-	selector := scraper.NewSelector(sanookScraper, twitterScraper)
+	selector := scraper.NewSelector(sanookScraper, twitterScraper, facebookScraper, pantipScraper, siamzoneScraper)
 
 	contentRepository := repository.NewContentRepository()
 	ticketRepository := repository.NewTicketRepository()
@@ -163,7 +167,8 @@ func (h Handler) submitWeblink(res http.ResponseWriter, req *http.Request) {
 		TitleEN:   &titleEN,
 		ContentEN: &contentEN,
 	}
-	log.Println(newContent)
+	log.Println("title: " + *newContent.TitleTH)
+	log.Println("content: " + *newContent.ContentTH)
 
 	sql, entityContent := h.contentRepository.UpdateContent(newContent)
 	tx.NamedExecContext(ctx, sql, entityContent)
@@ -268,7 +273,8 @@ func (h Handler) submitContent(res http.ResponseWriter, req *http.Request) {
 		TitleEN:   &titleEN,
 		ContentEN: &contentEN,
 	}
-	log.Println(newContent)
+	log.Println("title: " + *newContent.TitleTH)
+	log.Println("content: " + *newContent.ContentTH)
 
 	sql, entityContent := h.contentRepository.UpdateContent(newContent)
 	tx.NamedExecContext(ctx, sql, entityContent)
